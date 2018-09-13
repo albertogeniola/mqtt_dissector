@@ -1,5 +1,6 @@
 import struct
 
+
 class Byte(object):
     """Do cool things with a 8 bit number"""
 

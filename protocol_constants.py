@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, Enum
 
 
 # Constants
@@ -24,3 +24,20 @@ class ControlType(IntEnum):
     PINGREQ = 12        # 0xC0
     PINGRESP = 13       # 0xD0
     DISCONNECT = 14     # 0xE0
+
+
+class QoS(Enum):
+    AT_MOST_ONCE = 0
+    AT_LEAST_ONCE = 1
+    EXACTLY_ONCE = 2
+
+    @staticmethod
+    def parse(data):
+        if data == '00':
+            return QoS.AT_MOST_ONCE
+        elif data == '01':
+            return QoS.AT_LEAST_ONCE
+        elif data == '10':
+            return QoS.EXACTLY_ONCE
+
+        raise Exception("Invalid QoS value")

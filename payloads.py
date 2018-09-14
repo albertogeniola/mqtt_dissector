@@ -1,7 +1,7 @@
 
 from myutils import Byte, parse_utf8_prefixed_string
 from variable_headers import VariableHeader, ConnHeader
-from protocol_constants import ControlType
+from protocol_constants import ControlType, QoS
 
 
 class Payload(object):
@@ -27,6 +27,8 @@ class Payload(object):
             return EmptyPayload()
         elif fixed_header.control_packet_type == ControlType.PUBCOMP:
             return EmptyPayload()
+        elif fixed_header.control_packet_type == ControlType.SUBSCRIBE:
+            return SubscribePayload(data)
         else:
             raise Exception("Not Implemented")
 
@@ -91,3 +93,29 @@ class ConnPayload(Payload):
                "WillMessage: %s\n" \
                "Username: %s\n" \
                "Password: %s" % (self.client_identifier, self.will_topic, self.will_message, self.user_name, self.password)
+
+
+class SubscribePayload(Payload):
+    topics = {}
+
+    def __init__(self,
+                 data):
+        cursor = 0
+
+        # The payload of a SUBSCRIBE Packet contains a list of Topic Filters indicating the Topics to which the Client
+        # wants to subscribe. The Topic Filters in a SUBSCRIBE packet payload MUST be UTF-8 encoded strings
+        # We will scan the whole data byte stream until we parse all the topics.
+        while cursor < len(data):
+            topic, topic_len = parse_utf8_prefixed_string(data[cursor:])
+            cursor += topic_len
+
+            # After each topic name, there is one BYTE that encodes the requested QoS for that topic subscription
+            requested_qos = data[cursor]
+            cursor += 1
+            self.topics[topic] = QoS(requested_qos)
+
+        self.length = cursor
+
+    def __str__(self):
+        return "Topics: " + ",".join([( "%s (%s)" % (x, self.topics[x])) for x in self.topics])
+

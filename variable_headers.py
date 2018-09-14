@@ -23,6 +23,8 @@ class VariableHeader(object):
             return PubrelHeader(header_data)
         elif fixed_header.control_packet_type == ControlType.PUBCOMP:
             return PubcompHeader(header_data)
+        elif fixed_header.control_packet_type == ControlType.SUBSCRIBE:
+            return SubscribeHeader(header_data)
         else:
             raise Exception("Not Implemented")
 
@@ -109,7 +111,7 @@ class ConnackHeader(VariableHeader):
 
     def __str__(self):
         return "Session Present: %s\n" \
-               "Return Code: %d (%s)\n" % (self.session_present, self.return_code, self.return_code_desc)
+               "Return Code: %d (%s)" % (self.session_present, self.return_code, self.return_code_desc)
 
 
 class PublishHeader(VariableHeader):
@@ -131,7 +133,7 @@ class PublishHeader(VariableHeader):
 
     def __str__(self):
         return "Topic Name: %s\n" \
-               "Packet Identifier: %d (%s)\n" % (self.topic_name, self.packet_identifier)
+               "Packet Identifier: %d" % (self.topic_name, self.packet_identifier)
 
 
 class PubackHeader(VariableHeader):
@@ -144,7 +146,7 @@ class PubackHeader(VariableHeader):
         self.length = cursor
 
     def __str__(self):
-        return "Packet Identifier: %d (%s)\n" % self.packet_identifier
+        return "Packet Identifier: %d (%s)" % self.packet_identifier
 
 
 class PubrecHeader(VariableHeader):
@@ -157,7 +159,7 @@ class PubrecHeader(VariableHeader):
         self.length = cursor
 
     def __str__(self):
-        return "Packet Identifier: %d \n" % self.packet_identifier
+        return "Packet Identifier: %d" % self.packet_identifier
 
 
 class PubrelHeader(VariableHeader):
@@ -170,7 +172,7 @@ class PubrelHeader(VariableHeader):
         self.length = cursor
 
     def __str__(self):
-        return "Packet Identifier: %d \n" % self.packet_identifier
+        return "Packet Identifier: %d" % self.packet_identifier
 
 
 class PubcompHeader(VariableHeader):
@@ -183,4 +185,17 @@ class PubcompHeader(VariableHeader):
         self.length = cursor
 
     def __str__(self):
-        return "Packet Identifier: %d \n" % self.packet_identifier
+        return "Packet Identifier: %d" % self.packet_identifier
+
+
+class SubscribeHeader(VariableHeader):
+    packet_identifier = None
+
+    def __init__(self, data):
+        cursor = 0
+        self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
+        cursor += 2
+        self.length = cursor
+
+    def __str__(self):
+        return "Packet Identifier: %d" % self.packet_identifier

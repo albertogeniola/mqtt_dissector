@@ -29,6 +29,8 @@ class Payload(object):
             return EmptyPayload()
         elif fixed_header.control_packet_type == ControlType.SUBSCRIBE:
             return SubscribePayload(data)
+        elif fixed_header.control_packet_type == ControlType.SUBACK:
+            return SubackPayload(data)
         else:
             raise Exception("Not Implemented")
 
@@ -119,3 +121,35 @@ class SubscribePayload(Payload):
     def __str__(self):
         return "Topics: " + ",".join([( "%s (%s)" % (x, self.topics[x])) for x in self.topics])
 
+
+class SubackPayload(Payload):
+    return_codes = []
+    return_codes_description = []
+
+    def __init__(self,
+                 data):
+        cursor = 0
+        for b in data:
+            return_code = Byte(b).binary
+            self.return_codes.append(return_code)
+
+            if b'\x00' == b:
+                self.return_codes_description.append("Success - Maximum QoS 0")
+            elif b'\x01' == b:
+                self.return_codes_description.append("Success - Maximum QoS 1")
+            elif b'\x02' == b:
+                self.return_codes_description.append("Success - Maximum QoS 2")
+            elif b'\x80' == b:
+                self.return_codes_description.append("Failure")
+            else:
+                self.return_codes_description.append("INVALID / Unrecognized code")
+
+            cursor += 1
+
+        self.length = cursor
+
+    def __str__(self):
+        res = ""
+        for i in range(0, len(self.return_codes)):
+            res += "%s (%s)," % (self.return_codes[i], self.return_codes_description[i])
+        return res

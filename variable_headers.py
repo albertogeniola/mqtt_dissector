@@ -25,6 +25,8 @@ class VariableHeader(object):
             return PubcompHeader(header_data)
         elif fixed_header.control_packet_type == ControlType.SUBSCRIBE:
             return SubscribeHeader(header_data)
+        elif fixed_header.control_packet_type == ControlType.SUBACK:
+            return SubackHeader(header_data)
         else:
             raise Exception("Not Implemented")
 
@@ -199,3 +201,16 @@ class SubscribeHeader(VariableHeader):
 
     def __str__(self):
         return "Packet Identifier: %d" % self.packet_identifier
+
+
+class SubackHeader(VariableHeader):
+    packet_identifier = None
+
+    def __init__(self, data):
+        cursor = 0
+        self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
+        cursor += 2
+        self.length = cursor
+
+    def __str__(self):
+        return "Packet Identifier: %d \n" % self.packet_identifier

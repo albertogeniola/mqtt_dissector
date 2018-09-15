@@ -1,4 +1,3 @@
-
 from myutils import Byte, parse_utf8_prefixed_string
 from variable_headers import VariableHeader, ConnHeader
 from protocol_constants import ControlType, QoS
@@ -31,6 +30,16 @@ class Payload(object):
             return SubscribePayload(data)
         elif fixed_header.control_packet_type == ControlType.SUBACK:
             return SubackPayload(data)
+        elif fixed_header.control_packet_type == ControlType.UNSUBSCRIBE:
+            return SubackPayload(data)
+        elif fixed_header.control_packet_type == ControlType.UNSUBACK:
+            return EmptyPayload()
+        elif fixed_header.control_packet_type == ControlType.PINGREQ:
+            return EmptyPayload()
+        elif fixed_header.control_packet_type == ControlType.PINGRESP:
+            return EmptyPayload()
+        elif fixed_header.control_packet_type == ControlType.DISCONNECT:
+            return EmptyPayload()
         else:
             raise Exception("Not Implemented")
 
@@ -149,7 +158,24 @@ class SubackPayload(Payload):
         self.length = cursor
 
     def __str__(self):
-        res = ""
+        res = "Return codes: "
         for i in range(0, len(self.return_codes)):
             res += "%s (%s)," % (self.return_codes[i], self.return_codes_description[i])
         return res
+
+
+class UnsubscribePayload(Payload):
+    topics = []
+
+    def __init__(self,
+                 data):
+        cursor = 0
+        while cursor<len(data):
+            topic, topic_len = parse_utf8_prefixed_string(data[cursor:])
+            self.topics.append(topic)
+            cursor += topic_len
+
+        self.length = cursor
+
+    def __str__(self):
+        return "Topics: %s" % ",".join(self.topics)

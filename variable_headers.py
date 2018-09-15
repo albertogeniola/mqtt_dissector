@@ -27,8 +27,26 @@ class VariableHeader(object):
             return SubscribeHeader(header_data)
         elif fixed_header.control_packet_type == ControlType.SUBACK:
             return SubackHeader(header_data)
+        elif fixed_header.control_packet_type == ControlType.UNSUBSCRIBE:
+            return UnsubscribeHeader(header_data)
+        elif fixed_header.control_packet_type == ControlType.UNSUBSCRIBE:
+            return UnsubackHeader(header_data)
+        elif fixed_header.control_packet_type == ControlType.PINGREQ:
+            return EmptyVariableHeader()
+        elif fixed_header.control_packet_type == ControlType.PINGRESP:
+            return EmptyVariableHeader()
+        elif fixed_header.control_packet_type == ControlType.DISCONNECT:
+            return EmptyVariableHeader()
         else:
             raise Exception("Not Implemented")
+
+
+class EmptyVariableHeader(VariableHeader):
+    def __init__(self):
+        self.length = 0
+
+    def __str__(self):
+        return ""
 
 
 class ConnHeader(VariableHeader):
@@ -214,3 +232,30 @@ class SubackHeader(VariableHeader):
 
     def __str__(self):
         return "Packet Identifier: %d \n" % self.packet_identifier
+
+
+class UnsubscribeHeader(VariableHeader):
+    packet_identifier = None
+
+    def __init__(self, data):
+        cursor = 0
+        self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
+        cursor += 2
+        self.length = cursor
+
+    def __str__(self):
+        return "Packet Identifier: %d \n" % self.packet_identifier
+
+
+class UnsubackHeader(VariableHeader):
+    packet_identifier = None
+
+    def __init__(self, data):
+        cursor = 0
+        self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
+        cursor += 2
+        self.length = cursor
+
+    def __str__(self):
+        return "Packet Identifier: %d \n" % self.packet_identifier
+

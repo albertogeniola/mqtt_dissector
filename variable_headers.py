@@ -23,6 +23,8 @@ class VariableHeader(object):
             return PubrelHeader(header_data)
         elif fixed_header.control_packet_type == ControlType.PUBCOMP:
             return PubcompHeader(header_data)
+        elif fixed_header.control_packet_type == ControlType.PUBACK:
+            return PubackHeader(header_data)
         elif fixed_header.control_packet_type == ControlType.SUBSCRIBE:
             return SubscribeHeader(header_data)
         elif fixed_header.control_packet_type == ControlType.SUBACK:
@@ -166,7 +168,7 @@ class PubackHeader(VariableHeader):
         self.length = cursor
 
     def __str__(self):
-        return "Packet Identifier: %d (%s)" % self.packet_identifier
+        return "Packet Identifier: %d" % self.packet_identifier
 
 
 class PubrecHeader(VariableHeader):

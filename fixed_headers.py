@@ -1,16 +1,34 @@
-from myutils import Byte
-from protocol_constants import ControlType, QoS
+from mitmproxy.net.mqtt.myutils import Byte
+from mitmproxy.net.mqtt.protocol_constants import ControlType, QoS
 
 
 class FixedHeader(object):
     length = 2  # Fixed length of 2 bytes!
-    control_packet_type = None
-    flags = 0
-    formatted_flags = None
 
-    # The Remaining Length is the number of bytes remaining within the current packet, including data in the variable
-    # header and the payload. The Remaining Length does not include the bytes used to encode the Remaining Length.
-    remaining_length = 0
+    def __init__(self):
+        self.control_packet_type = None
+        self.flags = 0
+        self.formatted_flags = None
+
+        # The Remaining Length is the number of bytes remaining within the current packet, including data in the variable
+        # header and the payload. The Remaining Length does not include the bytes used to encode the Remaining Length.
+        self.remaining_length = 0
+
+    @staticmethod
+    def try_parse(data):
+        if len(data) < 2:
+            return False, None
+
+        first_byte = Byte(data[0])
+        try:
+            control_packet_type = ControlType(first_byte._high_nibble())
+            if control_packet_type == ControlType.PUBLISH:
+                return True, PublishFixedHeader(data)
+            # TODO: implement remaining fixed headers?
+            else:
+                return True, GenericFixedHeader(data)
+        except:
+            return False, None
 
     @staticmethod
     def parse(data):
@@ -47,6 +65,7 @@ class FixedHeader(object):
 
 class GenericFixedHeader(FixedHeader):
     def __init__(self, data):
+        super().__init__()
         first_byte = Byte(data[0])
         self.control_packet_type = ControlType(first_byte._high_nibble())
         self.flags = first_byte._low_nibble()
@@ -73,7 +92,6 @@ class PublishFixedHeader(GenericFixedHeader):
         self.dup_flag = self.formatted_flags[0] == '1'
         self.qos_level = QoS.parse(self.formatted_flags[1:3])
         self.retain = self.formatted_flags[3] == '1'
-
 
     def __str__(self):
         res = "%s\n" \

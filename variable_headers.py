@@ -1,14 +1,15 @@
 import struct
-from myutils import Byte, parse_utf8_prefixed_string
-from protocol_constants import ControlType
+from mitmproxy.net.mqtt.myutils import Byte, parse_utf8_prefixed_string
+from mitmproxy.net.mqtt.protocol_constants import ControlType
 
 
 class VariableHeader(object):
-    length = 0
+    def __init__(self):
+        self.length = 0
 
     @staticmethod
     def parse(
-            fixed_header, #  type:FixedHeader
+            fixed_header,  # type:FixedHeader
             header_data
     ):
         if fixed_header.control_packet_type == ControlType.CONNECT:
@@ -45,6 +46,7 @@ class VariableHeader(object):
 
 class EmptyVariableHeader(VariableHeader):
     def __init__(self):
+        super().__init__()
         self.length = 0
 
     def __str__(self):
@@ -64,12 +66,13 @@ class ConnHeader(VariableHeader):
         def __str__(self):
             return str(self.__dict__)
 
-    protocol_name = None
-    protocol_level = None
-    connect_flags = ConnectionFlags()
-    keep_alive = None
-
     def __init__(self, data):
+        super().__init__()
+        self.protocol_name = None
+        self.protocol_level = None
+        self.connect_flags = ConnHeader.ConnectionFlags()
+        self.keep_alive = None
+
         cursor = 0
 
         # Parse the protocol name: it's a UTF-8 string, prepended with a 2 bytes length
@@ -93,8 +96,8 @@ class ConnHeader(VariableHeader):
         self.connect_flags.password = flags[1] == '1'
 
         # Keep Alive
-        self.keep_alive = struct.unpack(">H", data[cursor:cursor+2])[0]
-        cursor +=2
+        self.keep_alive = struct.unpack(">H", data[cursor:cursor + 2])[0]
+        cursor += 2
 
         self.length = cursor
 
@@ -102,14 +105,11 @@ class ConnHeader(VariableHeader):
         return "ProtocolName: %s\n" \
                "ProtocolLevel: %s\n" \
                "ConnectionFlags: %s\n" \
-               "KeepAlive: %d" % (str(self.protocol_name), str(self.protocol_level), str(self.connect_flags), self.keep_alive)
+               "KeepAlive: %d" % (
+               str(self.protocol_name), str(self.protocol_level), str(self.connect_flags), self.keep_alive)
 
 
 class ConnackHeader(VariableHeader):
-    session_present = None
-    return_code = None
-    return_code_desc = None
-
     _RETURN_CODES = {
         0: "CONNECTION ACCEPTED",
         1: "CONNECTION REFUSED, unacceptable protocol version",
@@ -120,12 +120,17 @@ class ConnackHeader(VariableHeader):
     }
 
     def __init__(self, data):
+        super().__init__()
+        self.session_present = None
+        self.return_code = None
+        self.return_code_desc = None
+
         # The Connack variable header should be 2 bytes long
         if len(data) != 2:
-            #TODO warn if len is different
+            # TODO warn if len is different
             pass
 
-        first_byte_flags = Byte(data[0]) # TODO: Warn if some bits 1-7 are not 0
+        first_byte_flags = Byte(data[0])  # TODO: Warn if some bits 1-7 are not 0
         self.session_present = first_byte_flags.binary[7] == '1'
 
         self.return_code = data[1]
@@ -137,10 +142,10 @@ class ConnackHeader(VariableHeader):
 
 
 class PublishHeader(VariableHeader):
-    topic_name = None
-    packet_identifier = None
-
     def __init__(self, data, qos):
+        super().__init__()
+        self.packet_identifier = -1
+        self.topic_name = ""
         cursor = 0
 
         self.topic_name, data_len = parse_utf8_prefixed_string(data)
@@ -159,9 +164,9 @@ class PublishHeader(VariableHeader):
 
 
 class PubackHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -172,9 +177,9 @@ class PubackHeader(VariableHeader):
 
 
 class PubrecHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -185,9 +190,9 @@ class PubrecHeader(VariableHeader):
 
 
 class PubrelHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -198,9 +203,9 @@ class PubrelHeader(VariableHeader):
 
 
 class PubcompHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -211,9 +216,9 @@ class PubcompHeader(VariableHeader):
 
 
 class SubscribeHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -224,9 +229,9 @@ class SubscribeHeader(VariableHeader):
 
 
 class SubackHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -237,9 +242,9 @@ class SubackHeader(VariableHeader):
 
 
 class UnsubscribeHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -250,9 +255,9 @@ class UnsubscribeHeader(VariableHeader):
 
 
 class UnsubackHeader(VariableHeader):
-    packet_identifier = None
-
     def __init__(self, data):
+        super().__init__()
+        self.packet_identifier = -1
         cursor = 0
         self.packet_identifier = struct.unpack(">H", data[cursor:cursor + 2])[0]
         cursor += 2
@@ -260,4 +265,3 @@ class UnsubackHeader(VariableHeader):
 
     def __str__(self):
         return "Packet Identifier: %d \n" % self.packet_identifier
-

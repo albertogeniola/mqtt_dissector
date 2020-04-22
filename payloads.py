@@ -1,6 +1,6 @@
-from myutils import Byte, parse_utf8_prefixed_string
-from variable_headers import VariableHeader, ConnHeader
-from protocol_constants import ControlType, QoS
+from mitmproxy.net.mqtt.myutils import Byte, parse_utf8_prefixed_string
+from mitmproxy.net.mqtt.variable_headers import VariableHeader, ConnHeader
+from mitmproxy.net.mqtt.protocol_constants import ControlType, QoS
 
 
 class Payload(object):

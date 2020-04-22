@@ -1,12 +1,17 @@
-from variable_headers import VariableHeader
-from payloads import Payload
-from fixed_headers import FixedHeader
+from mitmproxy.net.mqtt.variable_headers import VariableHeader
+from mitmproxy.net.mqtt.payloads import Payload
+from mitmproxy.net.mqtt.fixed_headers import FixedHeader
 
 
 class MQTTPacket(object):
     header = None  # type:FixedHeader
     vheader = None
     payload = None
+
+    def __init__(self, header=None, vheader=None, payload=None):
+        self.header = header
+        self.vheader = vheader
+        self.payload = payload
 
     @staticmethod
     def parse(data):

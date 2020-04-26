@@ -1,10 +1,13 @@
-from mitmproxy.net.mqtt.myutils import Byte, parse_utf8_prefixed_string
-from mitmproxy.net.mqtt.variable_headers import VariableHeader, ConnHeader
-from mitmproxy.net.mqtt.protocol_constants import ControlType, QoS
+from abc import ABC
+
+from myutils import Byte, parse_utf8_prefixed_string
+from protocol_constants import ControlType, QoS
+from variable_headers import VariableHeader
 
 
-class Payload(object):
-    length = 0
+class Payload(ABC):
+    def __init__(self, length):
+        self.length = length
 
     @staticmethod
     def parse(
@@ -46,15 +49,15 @@ class Payload(object):
 
 class EmptyPayload(Payload):
     def __init__(self):
-        self.length = 0
+        super().__init__(length=0)
 
     def __str__(self):
         return ""
 
 
 class RawPayload(Payload):
-    data = None
     def __init__(self, data):
+        super().__init__(length=len(data))
         self.length = len(data)
         self.data = data
 
@@ -63,15 +66,15 @@ class RawPayload(Payload):
 
 
 class ConnPayload(Payload):
-    client_identifier = None
-    will_topic = None
-    will_message = None
-    user_name = None
-    password = None
+    def __init__(self, variable_header, data):
+        super().__init__(length=0)
 
-    def __init__(self,
-                 variable_header,  # type:ConnHeader
-                 data):
+        self.client_identifier = None
+        self.will_topic = None
+        self.will_message = None
+        self.user_name = None
+        self.password = None
+
         cursor = 0
 
         # The payload of the CONNECT Packet contains one or more length-prefixed fields, whose presence is
@@ -96,6 +99,7 @@ class ConnPayload(Payload):
             self.password, field_len = parse_utf8_prefixed_string(data[cursor:])
             cursor += field_len
 
+        # Update len
         self.length = cursor
 
     def __str__(self):
@@ -107,10 +111,9 @@ class ConnPayload(Payload):
 
 
 class SubscribePayload(Payload):
-    topics = {}
-
-    def __init__(self,
-                 data):
+    def __init__(self, data):
+        super().__init__(length=0)
+        self.topics = {}
         cursor = 0
 
         # The payload of a SUBSCRIBE Packet contains a list of Topic Filters indicating the Topics to which the Client
@@ -125,6 +128,7 @@ class SubscribePayload(Payload):
             cursor += 1
             self.topics[topic] = QoS(requested_qos)
 
+        # Update len
         self.length = cursor
 
     def __str__(self):
@@ -132,11 +136,11 @@ class SubscribePayload(Payload):
 
 
 class SubackPayload(Payload):
-    return_codes = []
-    return_codes_description = []
+    def __init__(self, data):
 
-    def __init__(self,
-                 data):
+        super().__init__(length=0)
+        self.return_codes = []
+        self.return_codes_description = []
         cursor = 0
         for b in data:
             return_code = Byte(b).binary
@@ -155,6 +159,7 @@ class SubackPayload(Payload):
 
             cursor += 1
 
+        # Update len
         self.length = cursor
 
     def __str__(self):
@@ -165,16 +170,16 @@ class SubackPayload(Payload):
 
 
 class UnsubscribePayload(Payload):
-    topics = []
-
-    def __init__(self,
-                 data):
+    def __init__(self, data):
+        super().__init__(length=0)
+        self.topics = []
         cursor = 0
         while cursor<len(data):
             topic, topic_len = parse_utf8_prefixed_string(data[cursor:])
             self.topics.append(topic)
             cursor += topic_len
 
+        # Update len
         self.length = cursor
 
     def __str__(self):

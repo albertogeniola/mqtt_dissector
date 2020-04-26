@@ -1,6 +1,7 @@
 import struct
-from mitmproxy.net.mqtt.myutils import Byte, parse_utf8_prefixed_string
-from mitmproxy.net.mqtt.protocol_constants import ControlType
+
+from myutils import Byte, parse_utf8_prefixed_string
+from protocol_constants import ControlType
 
 
 class VariableHeader(object):

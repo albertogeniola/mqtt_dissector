@@ -1,5 +1,5 @@
-from mitmproxy.net.mqtt.myutils import Byte
-from mitmproxy.net.mqtt.protocol_constants import ControlType, QoS
+from myutils import Byte
+from protocol_constants import ControlType, QoS
 
 
 class FixedHeader(object):

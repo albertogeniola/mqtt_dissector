@@ -13,12 +13,19 @@ def log_to_file(csv_writer, packet: MQTTPacket, client_ip: str, server_ip: str, 
     if hasattr(packet.payload, 'data'):
         data = packet.payload.data.decode()
     csv_entry = [timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"), direction, packet.header.control_packet_type.name, data, client_ip, server_ip]
-    w.writerow(csv_entry)
+    csv_writer.writerow(csv_entry)
 
 
 class MqttPacketDissector:
     def __init__(self):
         self.num = 0
+
+    def load(self, entry):
+        self.fd = open("mqtt.csv", "wt")
+        self.writer = writer(self.fd)
+
+    def done(self):
+        self.fd.close()
 
     def tcp_message(self, flow: tcp.TCPFlow):
         """
@@ -43,16 +50,12 @@ class MqttPacketDissector:
                       f"{topic_info}" \
                       f"{packet.inline_str()}\n---------------------------\n"
             ctx.log.info(log_msg)
-            log_to_file(writer, packet, client, server, direction, timestamp)
-            fd.flush()
+            log_to_file(self.writer, packet, client, server, direction, timestamp)
 
         except:
             logging.exception("Error")
             pass
 
-
-fd = open("mqtt.csv", "wt")
-w = writer(fd)
 
 addons = [
     MqttPacketDissector()
